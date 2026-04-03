@@ -5,3 +5,8 @@ openai==1.59.6
 redis[asyncio]==5.2.1
 pydantic==2.10.4
 python-dotenv==1.0.1
+# test dependencies
+pytest==8.3.4
+pytest-asyncio==0.24.0
+respx==0.21.1
+fakeredis==2.26.1
