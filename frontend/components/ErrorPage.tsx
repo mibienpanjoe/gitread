@@ -35,6 +35,12 @@ function resolveError(
           "GitHub is temporarily unreachable. Try again in a moment.",
         httpCode: "502",
       };
+    case "INVALID_USERNAME":
+      return {
+        title: "Invalid username",
+        message: `"${username}" isn't a valid GitHub username. Check the spelling and try again.`,
+        httpCode: "422",
+      };
     default:
       return {
         title: "Something went wrong",
