@@ -10,6 +10,7 @@ import { TopRepos } from "@/components/TopRepos";
 import { SkillProgression } from "@/components/SkillProgression";
 import { SuggestedProject } from "@/components/SuggestedProject";
 import { ShareButton } from "@/components/ShareButton";
+import { JobMatchPanel } from "@/components/JobMatchPanel";
 
 const LanguageChart = dynamic(
   () => import("@/components/LanguageChart").then((m) => m.LanguageChart),
@@ -168,7 +169,7 @@ async function ProfileContent({ username }: { username: string }) {
   }
 
   return (
-    <div className="animate-fade-up">
+    <div className="animate-fade-up space-y-5">
       {/* Two-column layout: left sidebar + right main */}
       <div className="flex flex-col lg:grid lg:grid-cols-[340px_1fr] gap-5">
 
@@ -195,6 +196,9 @@ async function ProfileContent({ username }: { username: string }) {
           />
         </div>
       </div>
+
+      {/* Job match — full width below the grid */}
+      <JobMatchPanel username={profile.username} />
     </div>
   );
 }
