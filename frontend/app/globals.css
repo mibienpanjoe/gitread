@@ -1,3 +1,89 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* -------------------------------------------------------------------------
+   CSS custom properties — dark mode (default)
+------------------------------------------------------------------------- */
+:root {
+  --color-primary: #22D3A0;
+  --color-bg: #0D1117;
+  --color-surface: #161B22;
+  --color-border: #30363D;
+  --color-text-primary: #E6EDF3;
+  --color-text-secondary: #7D8590;
+  --color-accent-purple: #BC8CFF;
+  --color-accent-blue: #58A6FF;
+  --color-accent-orange: #F0883E;
+  --color-success: #3FB950;
+  --color-warning: #D29922;
+  --color-error: #F85149;
+
+  --duration-fast: 100ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --duration-chart: 600ms;
+  --easing-out: cubic-bezier(0, 0, 0.2, 1);
+  --easing-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light mode variant */
+[data-theme="light"] {
+  --color-primary: #059669;
+  --color-bg: #F6F8FA;
+  --color-surface: #FFFFFF;
+  --color-border: #D0D7DE;
+  --color-text-primary: #1F2328;
+  --color-text-secondary: #656D76;
+}
+
+/* -------------------------------------------------------------------------
+   Base reset
+------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
+}
+
+/* -------------------------------------------------------------------------
+   Skeleton shimmer utility
+------------------------------------------------------------------------- */
+@layer utilities {
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #161B22 25%,
+      #21262D 50%,
+      #161B22 75%
+    );
+    background-size: 400px 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Accessibility — reduce motion
+------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
