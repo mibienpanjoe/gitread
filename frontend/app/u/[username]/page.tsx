@@ -11,6 +11,8 @@ import { SkillProgression } from "@/components/SkillProgression";
 import { SuggestedProject } from "@/components/SuggestedProject";
 import { ShareButton } from "@/components/ShareButton";
 import { JobMatchPanel } from "@/components/JobMatchPanel";
+import { ProfileSkeleton } from "@/components/ProfileSkeleton";
+import { ErrorPage } from "@/components/ErrorPage";
 
 const LanguageChart = dynamic(
   () => import("@/components/LanguageChart").then((m) => m.LanguageChart),
@@ -132,40 +134,9 @@ async function ProfileContent({ username }: { username: string }) {
     profile = await fetchProfile(username);
   } catch (err) {
     if (err instanceof APIError) {
-      if (err.status === 404 || err.code === "GITHUB_USER_NOT_FOUND") {
-        return (
-          <ErrorState
-            title="User not found"
-            message={`GitHub user "${username}" not found — check the spelling and try again.`}
-            code="404"
-          />
-        );
-      }
-      if (err.status === 429 || err.code === "GITHUB_RATE_LIMIT") {
-        return (
-          <ErrorState
-            title="Rate limit hit"
-            message="GitHub API rate limit exceeded. Please try again in a few minutes."
-            code="429"
-          />
-        );
-      }
-      if (err.status === 502 || err.code === "GITHUB_UNAVAILABLE") {
-        return (
-          <ErrorState
-            title="GitHub unavailable"
-            message="GitHub API is temporarily unavailable. Please try again shortly."
-            code="502"
-          />
-        );
-      }
+      return <ErrorPage username={username} errorCode={err.code} />;
     }
-    return (
-      <ErrorState
-        title="Something went wrong"
-        message="Something went wrong. Please try again."
-      />
-    );
+    return <ErrorPage username={username} errorCode="UNKNOWN" />;
   }
 
   return (
@@ -203,93 +174,3 @@ async function ProfileContent({ username }: { username: string }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Loading skeleton
-// ---------------------------------------------------------------------------
-
-function ProfileSkeleton() {
-  return (
-    <div className="flex flex-col lg:grid lg:grid-cols-[340px_1fr] gap-5">
-      {/* Left skeleton */}
-      <div className="flex flex-col gap-4">
-        <div className="rounded-lg border border-graphite bg-surface p-5">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-full skeleton" />
-            <div className="flex flex-col gap-2 flex-1">
-              <div className="skeleton h-4 w-28 rounded" />
-              <div className="skeleton h-5 w-36 rounded-full" />
-            </div>
-          </div>
-          <div className="skeleton h-6 w-3/4 rounded mb-2" />
-          <div className="space-y-1.5">
-            {[80, 95, 70].map((w) => (
-              <div
-                key={w}
-                className="skeleton h-3 rounded"
-                style={{ width: `${w}%` }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-lg border border-graphite bg-surface h-16 skeleton"
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Right skeleton */}
-      <div className="flex flex-col gap-4">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="rounded-lg border border-graphite bg-surface h-36 skeleton" />
-          <div className="rounded-lg border border-graphite bg-surface h-36 skeleton" />
-        </div>
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-lg border border-graphite bg-surface h-24 skeleton"
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Error state
-// ---------------------------------------------------------------------------
-
-function ErrorState({
-  title,
-  message,
-  code,
-}: {
-  title: string;
-  message: string;
-  code?: string;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center animate-fade-in">
-      {code && (
-        <div className="font-display font-bold text-[88px] leading-none text-graphite mb-4 select-none">
-          {code}
-        </div>
-      )}
-      <h2 className="font-display font-bold text-snow text-2xl mb-3">
-        {title}
-      </h2>
-      <p className="font-body text-ash text-base max-w-sm mb-8">{message}</p>
-      <Link
-        href="/"
-        className="rounded-lg border border-graphite px-5 py-2.5 font-body font-semibold text-sm text-snow hover:border-primary hover:text-primary transition-colors duration-150 focus-visible:outline-none focus-visible:border-primary"
-      >
-        ← Search again
-      </Link>
-    </div>
-  );
-}
