@@ -138,7 +138,7 @@ async function ProfileContent({ username }: { username: string }) {
         <div className="flex flex-col gap-4">
           <ProfileCard profile={profile} />
           <StatsBar github={profile.github} />
-          <SkillProgression ai={profile.ai} />
+          <SkillProgression ai={profile.ai} languages={profile.github.language_weighted} />
           <SuggestedProject ai={profile.ai} />
         </div>
 
