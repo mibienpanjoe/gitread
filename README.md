@@ -215,5 +215,5 @@ Valid scopes: `scaffold` · `models` · `github-gateway` · `profile-store` · `
 ---
 
 <div align="center">
-  <sub>Built with Claude Code</sub>
+  <sub>Built by mj</sub>
 </div>
