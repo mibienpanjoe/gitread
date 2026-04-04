@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { fetchProfile, APIError } from "@/lib/api";
@@ -9,6 +10,16 @@ import { TopRepos } from "@/components/TopRepos";
 import { SkillProgression } from "@/components/SkillProgression";
 import { SuggestedProject } from "@/components/SuggestedProject";
 import { ShareButton } from "@/components/ShareButton";
+
+const LanguageChart = dynamic(
+  () => import("@/components/LanguageChart").then((m) => m.LanguageChart),
+  { ssr: false }
+);
+
+const ActivityHeatmap = dynamic(
+  () => import("@/components/ActivityHeatmap").then((m) => m.ActivityHeatmap),
+  { ssr: false }
+);
 
 // ---------------------------------------------------------------------------
 // Open Graph metadata
@@ -171,22 +182,10 @@ async function ProfileContent({ username }: { username: string }) {
 
         {/* ── Right column ──────────────────────────────────────────── */}
         <div className="flex flex-col gap-5">
-          {/* Chart placeholders (replaced in Phase 9) */}
+          {/* Charts */}
           <div className="grid sm:grid-cols-2 gap-4">
-            <ChartPlaceholder
-              label="Language breakdown"
-              sub="Chart in Phase 9"
-              data={Object.entries(profile.github.language_weighted)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 5)
-                .map(([lang, pct]) => `${lang} ${Math.round(pct * 100)}%`)
-                .join(" · ")}
-            />
-            <ChartPlaceholder
-              label="90-day commit activity"
-              sub="Chart in Phase 9"
-              data={`${profile.github.commit_frequency_90d.reduce((s, d) => s + d.count, 0)} commits`}
-            />
+            <LanguageChart languages={profile.github.language_weighted} />
+            <ActivityHeatmap data={profile.github.commit_frequency_90d} />
           </div>
 
           {/* Top repos */}
@@ -196,34 +195,6 @@ async function ProfileContent({ username }: { username: string }) {
           />
         </div>
       </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Chart placeholder (Phase 8 → replaced in Phase 9)
-// ---------------------------------------------------------------------------
-
-function ChartPlaceholder({
-  label,
-  sub,
-  data,
-}: {
-  label: string;
-  sub: string;
-  data?: string;
-}) {
-  return (
-    <div className="rounded-lg border border-graphite bg-surface p-4 min-h-[140px] flex flex-col justify-between">
-      <div>
-        <p className="font-body font-semibold text-xs text-ash uppercase tracking-widest mb-1">
-          {label}
-        </p>
-        {data && (
-          <p className="font-mono text-sm text-snow">{data}</p>
-        )}
-      </div>
-      <p className="font-mono text-xs text-graphite">{sub}</p>
     </div>
   );
 }
