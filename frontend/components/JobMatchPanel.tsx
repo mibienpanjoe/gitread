@@ -179,18 +179,21 @@ export function JobMatchPanel({ username }: Props) {
             </button>
           </form>
 
-          {/* Error state */}
-          {mutation.isError && (
-            <div className="rounded-md border border-error/30 bg-error/10 px-4 py-3">
-              <p className="font-body text-sm text-error">
-                {errorMessage(mutation.error)}
-              </p>
-            </div>
-          )}
+          {/* Live region — announces result/error to screen readers */}
+          <div aria-live="polite" aria-atomic="true">
+            {/* Error state */}
+            {mutation.isError && (
+              <div className="rounded-md border border-error/30 bg-error/10 px-4 py-3">
+                <p className="font-body text-sm text-error">
+                  {errorMessage(mutation.error)}
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* Results */}
           {result && (
-            <div className="space-y-5 pt-1">
+            <div className="space-y-5 pt-1" aria-label="Job match results">
               {/* Divider */}
               <div className="border-t border-graphite" />
 
