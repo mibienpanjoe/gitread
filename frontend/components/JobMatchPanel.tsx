@@ -14,11 +14,11 @@ function errorMessage(err: unknown): string {
     if (err.code === "AI_UNAVAILABLE") {
       return "AI scoring is temporarily unavailable. Please try again shortly.";
     }
-    if (err.code === "JOB_URL_FETCH_FAILED") {
+    if (err.code === "JOB_URL_FETCH_ERROR") {
       return "Couldn't fetch that URL. Try pasting the job description instead.";
     }
-    if (err.code === "JOB_TEXT_TOO_SHORT") {
-      return "The job description is too short. Paste at least a paragraph.";
+    if (err.code === "JOB_TEXT_TOO_LONG") {
+      return "The job description is too long. Try pasting a shorter excerpt.";
     }
   }
   return "Something went wrong. Please try again.";
