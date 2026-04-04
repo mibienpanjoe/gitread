@@ -33,7 +33,6 @@ interface Slice {
 
 function buildSlices(languages: Record<string, number>): Slice[] {
   const sorted = Object.entries(languages).sort(([, a], [, b]) => b - a);
-
   const main: Slice[] = [];
   let otherTotal = 0;
 
@@ -44,11 +43,7 @@ function buildSlices(languages: Record<string, number>): Slice[] {
       otherTotal += pct;
     }
   }
-
-  if (otherTotal > 0) {
-    main.push({ name: "Other", value: otherTotal });
-  }
-
+  if (otherTotal > 0) main.push({ name: "Other", value: otherTotal });
   return main;
 }
 
@@ -56,45 +51,36 @@ function fmtPct(value: number) {
   return `${Math.round(value * 100)}%`;
 }
 
-// Custom label rendered outside each slice
-function renderLabel({
-  cx,
-  cy,
-  midAngle,
-  outerRadius,
-  name,
-  value,
+function CustomTooltip({
+  active,
+  payload,
 }: {
-  cx: number;
-  cy: number;
-  midAngle: number;
-  outerRadius: number;
-  name: string;
-  value: number;
-  index: number;
+  active?: boolean;
+  payload?: { name: string; value: number; payload: { name: string } }[];
 }) {
-  const RADIAN = Math.PI / 180;
-  const radius = outerRadius + 28;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
+  if (!active || !payload?.length) return null;
+  const { name } = payload[0].payload;
+  const value = payload[0].value;
   return (
-    <text
-      x={x}
-      y={y}
-      fill="#7D8590"
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-      style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}
+    <div
+      style={{
+        background: "#161B22",
+        border: "1px solid #30363D",
+        borderRadius: 6,
+        padding: "6px 10px",
+        fontFamily: "var(--font-mono)",
+        fontSize: 12,
+        color: "#E6EDF3",
+      }}
     >
-      {`${name} ${fmtPct(value)}`}
-    </text>
+      <span style={{ color: "#7D8590" }}>{name}</span>{" "}
+      <span style={{ color: "#E6EDF3", fontWeight: 600 }}>{fmtPct(value)}</span>
+    </div>
   );
 }
 
 export function LanguageChart({ languages }: Props) {
   const slices = buildSlices(languages);
-
   if (slices.length === 0) return null;
 
   const topLang = slices[0].name;
@@ -111,10 +97,11 @@ export function LanguageChart({ languages }: Props) {
         Language breakdown
       </p>
 
+      {/* Donut — no external labels, more room to breathe */}
       <div
         aria-label="Language breakdown chart"
         role="img"
-        style={{ height: 220 }}
+        style={{ height: 180 }}
       >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -122,12 +109,11 @@ export function LanguageChart({ languages }: Props) {
               data={slices}
               cx="50%"
               cy="50%"
-              innerRadius={50}
-              outerRadius={74}
+              innerRadius={52}
+              outerRadius={78}
               paddingAngle={2}
               dataKey="value"
-              labelLine={false}
-              label={renderLabel}
+              label={false}
               isAnimationActive={true}
             >
               {slices.map((_, index) => (
@@ -144,23 +130,34 @@ export function LanguageChart({ languages }: Props) {
                   fontFamily: "var(--font-mono)",
                   fontSize: 13,
                   fill: "#E6EDF3",
+                  fontWeight: 600,
                 }}
               />
             </Pie>
-            <Tooltip
-              formatter={(value: number) => [fmtPct(value), "Share"]}
-              contentStyle={{
-                background: "#161B22",
-                border: "1px solid #30363D",
-                borderRadius: 6,
-                fontFamily: "var(--font-mono)",
-                fontSize: 12,
-                color: "#E6EDF3",
-              }}
-              itemStyle={{ color: "#E6EDF3" }}
-            />
+            <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* Legend — inside the card, never clips */}
+      <div className="mt-3 space-y-1.5">
+        {slices.map((slice, i) => (
+          <div key={slice.name} className="flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                aria-hidden="true"
+                className="w-2 h-2 rounded-sm flex-shrink-0"
+                style={{ background: COLORS[i % COLORS.length] }}
+              />
+              <span className="font-mono text-xs text-ash truncate">
+                {slice.name}
+              </span>
+            </div>
+            <span className="font-mono text-xs text-snow ml-3 flex-shrink-0">
+              {fmtPct(slice.value)}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* Screen-reader accessible fallback table */}
