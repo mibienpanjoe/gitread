@@ -213,7 +213,9 @@ class AIAnalyst:
             "## Instructions\n"
             "- Only reference repositories listed above. "
             "Do not invent projects, languages, or technologies.\n"
-            '- Write the bio as 2\u20133 sentences in second person ("You are...").\n'
+            "- Write the bio as 2\u20133 sentences in third person "
+            '(e.g. "Known for X, {username} is..."). '
+            "Do not use second person ('You are...').\n"
             "- Strengths should be 3\u20135 concrete technical skills evident from the data.\n"
             '- archetype must start with "The " (e.g. "The Backend Engineer").\n'
             "- trend must be one of: growing, stable, declining.\n"
