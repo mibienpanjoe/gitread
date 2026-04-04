@@ -217,6 +217,14 @@ class AIAnalyst:
             "- Strengths should be 3\u20135 concrete technical skills evident from the data.\n"
             '- archetype must start with "The " (e.g. "The Backend Engineer").\n'
             "- trend must be one of: growing, stable, declining.\n"
+            "- suggested_project: propose one concrete, catchy side-project the "
+            "developer could build next. It must: (1) have a specific name, "
+            "(2) name the exact language/stack from their profile, "
+            "(3) state a clear, interesting purpose in one sentence. "
+            'Bad example: "Contribute to an open-source project." '
+            'Good example: "Build \'KernelWatch\' — a C tool that hooks into '
+            "Linux perf_events and streams live syscall latency stats to a "
+            'terminal dashboard using ncurses."\n'
         )
 
     def _build_job_match_prompt(self, data: GitHubData, job_text: str) -> str:
