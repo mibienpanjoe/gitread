@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { fetchProfile, APIError } from "@/lib/api";
@@ -13,16 +12,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { JobMatchPanel } from "@/components/JobMatchPanel";
 import { ProfileSkeleton } from "@/components/ProfileSkeleton";
 import { ErrorPage } from "@/components/ErrorPage";
-
-const LanguageChart = dynamic(
-  () => import("@/components/LanguageChart").then((m) => m.LanguageChart),
-  { ssr: false }
-);
-
-const ActivityHeatmap = dynamic(
-  () => import("@/components/ActivityHeatmap").then((m) => m.ActivityHeatmap),
-  { ssr: false }
-);
+import { ChartGroup } from "@/components/ChartGroup";
 
 // ---------------------------------------------------------------------------
 // Open Graph metadata
@@ -155,10 +145,10 @@ async function ProfileContent({ username }: { username: string }) {
         {/* ── Right column ──────────────────────────────────────────── */}
         <div className="flex flex-col gap-5">
           {/* Charts */}
-          <div className="grid sm:grid-cols-2 gap-4">
-            <LanguageChart languages={profile.github.language_weighted} />
-            <ActivityHeatmap data={profile.github.commit_frequency_90d} />
-          </div>
+          <ChartGroup
+            languages={profile.github.language_weighted}
+            commitFrequency={profile.github.commit_frequency_90d}
+          />
 
           {/* Top repos */}
           <TopRepos
