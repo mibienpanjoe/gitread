@@ -5,23 +5,23 @@ interface Props {
   repos: TopRepo[];
 }
 
-/** Best-effort language → dot colour mapping */
+/** Best-effort language → dot colour mapping (tuned for dark backgrounds) */
 const LANG_COLOR: Record<string, string> = {
   TypeScript: "#3178c6",
   JavaScript: "#f1e05a",
-  Python: "#3572A5",
+  Python: "#4584b6",
   Go: "#00ADD8",
   Rust: "#dea584",
-  Java: "#b07219",
+  Java: "#e76f00",
   "C++": "#f34b7d",
-  C: "#555555",
-  Ruby: "#701516",
+  C: "#9e9e9e",       // #555555 is invisible on dark bg — use mid-gray
+  Ruby: "#cc342d",
   Swift: "#F05138",
   Kotlin: "#A97BFF",
-  PHP: "#4F5D95",
+  PHP: "#7a86b8",
   Shell: "#89e051",
   HTML: "#e34c26",
-  CSS: "#563d7c",
+  CSS: "#7c5cbf",
   Dart: "#00B4AB",
   Elixir: "#6e4a7e",
   Vue: "#41b883",
@@ -39,6 +39,16 @@ function LangBadge({ language }: { language: string }) {
       {language}
     </span>
   );
+}
+
+function timeAgo(isoDate: string): string {
+  const diffDays = Math.floor(
+    (Date.now() - new Date(isoDate).getTime()) / 86_400_000
+  );
+  if (diffDays < 1) return "today";
+  if (diffDays < 30) return `${diffDays}d ago`;
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+  return `${Math.floor(diffDays / 365)}y ago`;
 }
 
 export function TopRepos({ username, repos }: Props) {
@@ -60,7 +70,7 @@ export function TopRepos({ username, repos }: Props) {
               key={repo.name}
               className="rounded-lg border border-graphite bg-surface p-4 hover:border-ash transition-colors duration-150"
             >
-              {/* Name + stars */}
+              {/* Name + stars + forks */}
               <div className="flex items-start justify-between gap-3 mb-2">
                 <a
                   href={`https://github.com/${username}/${repo.name}`}
@@ -70,31 +80,71 @@ export function TopRepos({ username, repos }: Props) {
                 >
                   {repo.name}
                 </a>
-                <span className="flex-shrink-0 flex items-center gap-1 font-mono text-xs text-ash">
-                  <span aria-hidden="true">★</span>
-                  {repo.stars.toLocaleString()}
-                </span>
+                <div className="flex-shrink-0 flex items-center gap-3 font-mono text-xs text-ash">
+                  <span
+                    className="flex items-center gap-1"
+                    title={`${repo.stars.toLocaleString()} stars`}
+                  >
+                    <span aria-hidden="true">★</span>
+                    {repo.stars.toLocaleString()}
+                  </span>
+                  {repo.forks > 0 && (
+                    <span
+                      className="flex items-center gap-1"
+                      title={`${repo.forks.toLocaleString()} forks`}
+                    >
+                      <svg
+                        aria-hidden="true"
+                        width="11"
+                        height="11"
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                      >
+                        <path d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h1.5v2.128a2.251 2.251 0 1 0 1.5 0V8.5h1.5a2.25 2.25 0 0 0 2.25-2.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878zm3.75 7.378a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm3-8.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0z" />
+                      </svg>
+                      {repo.forks.toLocaleString()}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Description */}
+              {/* Description + AI badge on same row but badge is outside prose */}
               {description && (
-                <p className="font-body text-xs text-ash leading-relaxed mb-2 line-clamp-2">
-                  {description}
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="font-body text-xs text-ash leading-relaxed line-clamp-2">
+                    {description}
+                  </p>
                   {repo.ai_description && (
                     <span
-                      aria-label="AI generated"
+                      aria-label="AI generated description"
                       title="AI generated"
-                      className="ml-1.5 inline-block align-middle"
-                      style={{ color: "#BC8CFF", fontSize: "10px" }}
+                      className="flex-shrink-0 flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold"
+                      style={{
+                        background: "rgba(188,140,255,0.1)",
+                        border: "1px solid rgba(188,140,255,0.25)",
+                        color: "#BC8CFF",
+                      }}
                     >
                       ✦ AI
                     </span>
                   )}
-                </p>
+                </div>
               )}
 
-              {/* Language badge */}
-              {repo.language && <LangBadge language={repo.language} />}
+              {/* Language + last active */}
+              <div className="flex items-center justify-between">
+                {repo.language ? (
+                  <LangBadge language={repo.language} />
+                ) : (
+                  <span />
+                )}
+                <span
+                  className="font-body text-xs text-ash"
+                  title={`Last pushed ${new Date(repo.pushed_at).toLocaleDateString()}`}
+                >
+                  {timeAgo(repo.pushed_at)}
+                </span>
+              </div>
             </li>
           );
         })}
