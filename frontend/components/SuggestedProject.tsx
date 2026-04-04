@@ -4,18 +4,40 @@ interface Props {
   ai: AIProfile;
 }
 
-/** Highlight a quoted project name 'LikThis' in the suggestion text. */
+/**
+ * Highlight the project name in the suggestion text.
+ * Handles two AI output patterns:
+ *   1. Quoted:   "Build 'KernelWatch' — a C tool..."
+ *   2. Unquoted: "Create TravelBuddy — a JavaScript app..."
+ */
 function renderProjectText(text: string) {
-  const parts = text.split(/('[\w\s\-]+')/);
-  return parts.map((part, i) =>
-    /^'[\w\s\-]+'$/.test(part) ? (
-      <span key={i} className="font-mono text-primary font-semibold">
-        {part.slice(1, -1)}
-      </span>
-    ) : (
-      part
-    )
+  // Pattern 1: 'QuotedName'
+  const quoted = text.match(/^(.*?)'([\w\s\-]+)'(.*)$/s);
+  if (quoted) {
+    return (
+      <>
+        {quoted[1]}
+        <span className="font-mono text-primary font-semibold">{quoted[2]}</span>
+        {quoted[3]}
+      </>
+    );
+  }
+
+  // Pattern 2: Build/Create/Develop CamelCaseName —
+  const unquoted = text.match(
+    /^((Build|Create|Develop|Make|Launch)\s+)([A-Z][A-Za-z0-9]+)(\s*[—–].*)$/s
   );
+  if (unquoted) {
+    return (
+      <>
+        {unquoted[1]}
+        <span className="font-mono text-primary font-semibold">{unquoted[3]}</span>
+        {unquoted[4]}
+      </>
+    );
+  }
+
+  return <>{text}</>;
 }
 
 export function SuggestedProject({ ai }: Props) {
