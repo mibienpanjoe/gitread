@@ -1,7 +1,44 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { fetchProfile, APIError } from "@/lib/api";
 import type { Profile } from "@/lib/api";
+import { ProfileCard } from "@/components/ProfileCard";
+import { StatsBar } from "@/components/StatsBar";
+import { TopRepos } from "@/components/TopRepos";
+import { SkillProgression } from "@/components/SkillProgression";
+import { SuggestedProject } from "@/components/SuggestedProject";
+import { ShareButton } from "@/components/ShareButton";
+
+// ---------------------------------------------------------------------------
+// Open Graph metadata
+// ---------------------------------------------------------------------------
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username } = await params;
+  try {
+    const profile = await fetchProfile(username);
+    const title = profile.ai.card?.title ?? username;
+    const description =
+      profile.ai.card?.bio ?? `GitHub profile for ${username}`;
+    return {
+      title: `${title} — Gitread`,
+      description,
+      openGraph: {
+        title: `${title} — Gitread`,
+        description,
+        url: `https://gitread.dev/u/${username}`,
+        siteName: "Gitread",
+      },
+    };
+  } catch {
+    return { title: `${username} — Gitread` };
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Page entry — server component
@@ -16,38 +53,55 @@ export default async function ProfilePage({
 
   return (
     <div className="min-h-dvh bg-ink">
+      {/* Dot-grid background */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, #E6EDF3 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+          opacity: 0.04,
+        }}
+      />
+
       {/* Nav */}
-      <nav className="border-b border-graphite px-6 sm:px-10 py-4 flex items-center justify-between max-w-5xl mx-auto">
-        <Link
-          href="/"
-          className="font-display font-bold text-snow text-xl tracking-tight hover:text-primary transition-colors duration-100"
-        >
-          gitread
-        </Link>
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 font-mono text-sm text-ash hover:text-snow transition-colors duration-100 focus-visible:outline-none focus-visible:text-snow"
-        >
-          <svg
-            aria-hidden="true"
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+      <nav className="relative z-10 border-b border-graphite px-6 sm:px-10 py-4">
+        <div className="flex items-center justify-between max-w-5xl mx-auto">
+          <Link
+            href="/"
+            className="font-display font-bold text-snow text-xl tracking-tight hover:text-primary transition-colors duration-100"
           >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Search again
-        </Link>
+            gitread
+          </Link>
+          <div className="flex items-center gap-3">
+            <ShareButton />
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 font-mono text-sm text-ash hover:text-snow transition-colors duration-100 focus-visible:outline-none focus-visible:text-snow"
+            >
+              <svg
+                aria-hidden="true"
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              Search again
+            </Link>
+          </div>
+        </div>
       </nav>
 
       {/* Content */}
-      <main className="max-w-5xl mx-auto px-6 sm:px-10 py-10">
-        <Suspense fallback={<ProfileSkeleton username={username} />}>
+      <main className="relative z-10 max-w-5xl mx-auto px-6 sm:px-10 py-8">
+        <Suspense fallback={<ProfileSkeleton />}>
           <ProfileContent username={username} />
         </Suspense>
       </main>
@@ -56,7 +110,7 @@ export default async function ProfilePage({
 }
 
 // ---------------------------------------------------------------------------
-// Async content — throws to Suspense boundary while loading
+// Async profile content (Suspense boundary)
 // ---------------------------------------------------------------------------
 
 async function ProfileContent({ username }: { username: string }) {
@@ -102,84 +156,74 @@ async function ProfileContent({ username }: { username: string }) {
     );
   }
 
-  return <ProfileDataView profile={profile} />;
+  return (
+    <div className="animate-fade-up">
+      {/* Two-column layout: left sidebar + right main */}
+      <div className="flex flex-col lg:grid lg:grid-cols-[340px_1fr] gap-5">
+
+        {/* ── Left column ───────────────────────────────────────────── */}
+        <div className="flex flex-col gap-4">
+          <ProfileCard profile={profile} />
+          <StatsBar github={profile.github} />
+          <SkillProgression ai={profile.ai} />
+          <SuggestedProject ai={profile.ai} />
+        </div>
+
+        {/* ── Right column ──────────────────────────────────────────── */}
+        <div className="flex flex-col gap-5">
+          {/* Chart placeholders (replaced in Phase 9) */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <ChartPlaceholder
+              label="Language breakdown"
+              sub="Chart in Phase 9"
+              data={Object.entries(profile.github.language_weighted)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 5)
+                .map(([lang, pct]) => `${lang} ${Math.round(pct * 100)}%`)
+                .join(" · ")}
+            />
+            <ChartPlaceholder
+              label="90-day commit activity"
+              sub="Chart in Phase 9"
+              data={`${profile.github.commit_frequency_90d.reduce((s, d) => s + d.count, 0)} commits`}
+            />
+          </div>
+
+          {/* Top repos */}
+          <TopRepos
+            username={profile.username}
+            repos={profile.top_repos}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
-// Profile data view (Phase 7 placeholder — raw JSON)
+// Chart placeholder (Phase 8 → replaced in Phase 9)
 // ---------------------------------------------------------------------------
 
-function ProfileDataView({ profile }: { profile: Profile }) {
+function ChartPlaceholder({
+  label,
+  sub,
+  data,
+}: {
+  label: string;
+  sub: string;
+  data?: string;
+}) {
   return (
-    <div className="animate-fade-up">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        {/* Avatar */}
-        <img
-          src={`https://avatars.githubusercontent.com/${profile.username}`}
-          alt={`${profile.username}'s GitHub avatar`}
-          width={64}
-          height={64}
-          className="rounded-full border border-graphite"
-        />
-        <div>
-          <h1 className="font-display font-bold text-snow text-2xl">
-            {profile.username}
-          </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="font-mono text-sm text-ash">
-              @{profile.username}
-            </span>
-            {profile.cached && (
-              <span className="rounded-full border border-graphite px-2 py-0.5 font-mono text-xs text-ash">
-                cached
-              </span>
-            )}
-            {!profile.ai_available && (
-              <span className="rounded-full border border-graphite px-2 py-0.5 font-mono text-xs text-ash">
-                AI unavailable
-              </span>
-            )}
-          </div>
-        </div>
+    <div className="rounded-lg border border-graphite bg-surface p-4 min-h-[140px] flex flex-col justify-between">
+      <div>
+        <p className="font-body font-semibold text-xs text-ash uppercase tracking-widest mb-1">
+          {label}
+        </p>
+        {data && (
+          <p className="font-mono text-sm text-snow">{data}</p>
+        )}
       </div>
-
-      {/* Quick stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-        {[
-          { label: "Stars", value: profile.github.total_stars, icon: "★" },
-          { label: "Forks", value: profile.github.total_forks, icon: "⑂" },
-          { label: "Repos", value: profile.github.total_public_repos, icon: "▤" },
-          {
-            label: "Account age",
-            value: `${Math.floor(profile.github.account_age_days / 365)}y`,
-            icon: "◷",
-          },
-        ].map(({ label, value, icon }) => (
-          <div
-            key={label}
-            className="rounded-lg border border-graphite bg-surface px-4 py-3"
-          >
-            <div className="font-mono text-xl text-snow font-medium">
-              {icon} {value}
-            </div>
-            <div className="font-body text-xs text-ash mt-1">{label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Raw JSON — Phase 7 placeholder */}
-      <div className="rounded-lg border border-graphite bg-surface overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-graphite">
-          <span className="font-mono text-xs text-ash">profile.json</span>
-          <span className="font-mono text-xs text-ash">
-            Phase 7 — full UI in Phase 8+
-          </span>
-        </div>
-        <pre className="overflow-x-auto p-4 font-mono text-xs text-snow/80 leading-relaxed whitespace-pre-wrap break-all">
-          {JSON.stringify(profile, null, 2)}
-        </pre>
-      </div>
+      <p className="font-mono text-xs text-graphite">{sub}</p>
     </div>
   );
 }
@@ -188,45 +232,55 @@ function ProfileDataView({ profile }: { profile: Profile }) {
 // Loading skeleton
 // ---------------------------------------------------------------------------
 
-function ProfileSkeleton({ username }: { username: string }) {
+function ProfileSkeleton() {
   return (
-    <div>
-      {/* Header skeleton */}
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-16 h-16 rounded-full skeleton" />
-        <div className="flex flex-col gap-2">
-          <div className="skeleton h-6 w-32 rounded" />
-          <div className="skeleton h-4 w-24 rounded" />
+    <div className="flex flex-col lg:grid lg:grid-cols-[340px_1fr] gap-5">
+      {/* Left skeleton */}
+      <div className="flex flex-col gap-4">
+        <div className="rounded-lg border border-graphite bg-surface p-5">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-16 h-16 rounded-full skeleton" />
+            <div className="flex flex-col gap-2 flex-1">
+              <div className="skeleton h-4 w-28 rounded" />
+              <div className="skeleton h-5 w-36 rounded-full" />
+            </div>
+          </div>
+          <div className="skeleton h-6 w-3/4 rounded mb-2" />
+          <div className="space-y-1.5">
+            {[80, 95, 70].map((w) => (
+              <div
+                key={w}
+                className="skeleton h-3 rounded"
+                style={{ width: `${w}%` }}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-lg border border-graphite bg-surface h-16 skeleton"
+            />
+          ))}
         </div>
       </div>
 
-      {/* Stats skeleton */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="rounded-lg border border-graphite bg-surface px-4 py-3"
-          >
-            <div className="skeleton h-6 w-16 rounded mb-1" />
-            <div className="skeleton h-3 w-12 rounded" />
-          </div>
-        ))}
+      {/* Right skeleton */}
+      <div className="flex flex-col gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="rounded-lg border border-graphite bg-surface h-36 skeleton" />
+          <div className="rounded-lg border border-graphite bg-surface h-36 skeleton" />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-lg border border-graphite bg-surface h-24 skeleton"
+            />
+          ))}
+        </div>
       </div>
-
-      {/* Body skeleton */}
-      <div className="rounded-lg border border-graphite bg-surface p-4 space-y-2">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={i}
-            className="skeleton h-4 rounded"
-            style={{ width: `${65 + Math.sin(i) * 25}%` }}
-          />
-        ))}
-      </div>
-
-      <p className="mt-4 font-mono text-xs text-ash text-center">
-        Fetching {username}&apos;s GitHub data…
-      </p>
     </div>
   );
 }
@@ -245,9 +299,9 @@ function ErrorState({
   code?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[40vh] text-center animate-fade-in">
+    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center animate-fade-in">
       {code && (
-        <div className="font-display font-bold text-[80px] leading-none text-graphite mb-4 select-none">
+        <div className="font-display font-bold text-[88px] leading-none text-graphite mb-4 select-none">
           {code}
         </div>
       )}
