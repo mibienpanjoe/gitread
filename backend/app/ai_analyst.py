@@ -190,6 +190,9 @@ class AIAnalyst:
             for r in top_repos
         )
 
+        # All repo names (for the "don't duplicate" check)
+        all_repo_names = ", ".join(r.name for r in data.repos)
+
         top_langs = sorted(
             data.language_weighted.items(), key=lambda x: x[1], reverse=True
         )[:5]
@@ -206,8 +209,10 @@ class AIAnalyst:
             f"Total public repos: {data.total_public_repos}\n"
             f"Total stars: {data.total_stars}\n"
             f"Commit activity (last 90 days): {activity}\n\n"
-            "## Top Repositories\n"
+            "## Top Repositories (by stars)\n"
             f"{repo_lines or '(none)'}\n\n"
+            f"## All Existing Repositories\n"
+            f"{all_repo_names or '(none)'}\n\n"
             "## Language Distribution (star-weighted)\n"
             f"{lang_lines or '(none)'}\n\n"
             "## Instructions\n"
@@ -223,6 +228,10 @@ class AIAnalyst:
             "developer could build next. It must: (1) have a specific name, "
             "(2) name the exact language/stack from their profile, "
             "(3) state a clear, interesting purpose in one sentence. "
+            "IMPORTANT: the suggested project must NOT be something the developer "
+            "has already built — cross-check every suggestion against ALL existing "
+            "repositories listed above, including conceptual overlap "
+            "(e.g. do not suggest a video downloader if one already exists). "
             'Bad example: "Contribute to an open-source project." '
             'Good example: "Build \'KernelWatch\' — a C tool that hooks into '
             "Linux perf_events and streams live syscall latency stats to a "
