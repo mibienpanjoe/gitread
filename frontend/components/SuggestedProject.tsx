@@ -12,7 +12,7 @@ interface Props {
  */
 function renderProjectText(text: string) {
   // Pattern 1: 'QuotedName'
-  const quoted = text.match(/^(.*?)'([\w\s\-]+)'(.*)$/s);
+  const quoted = text.match(/^(.*?)'([\w\s\-]+)'(.*)$/);
   if (quoted) {
     return (
       <>
@@ -25,7 +25,7 @@ function renderProjectText(text: string) {
 
   // Pattern 2: Build/Create/Develop CamelCaseName —
   const unquoted = text.match(
-    /^((Build|Create|Develop|Make|Launch)\s+)([A-Z][A-Za-z0-9]+)(\s*[—–].*)$/s
+    /^((Build|Create|Develop|Make|Launch)\s+)([A-Z][A-Za-z0-9]+)(\s*[—–].*)$/
   );
   if (unquoted) {
     return (

@@ -7,7 +7,7 @@ from typing import Any, AsyncGenerator
 
 import httpx
 from bs4 import BeautifulSoup
-from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.ai_analyst import AIAnalyst
@@ -16,10 +16,9 @@ from app.errors import (
     GitHubRateLimitError,
     GitHubUnavailableError,
     GitHubUserNotFoundError,
-    JobURLFetchError,
 )
 from app.github_gateway import GitHubGateway
-from app.models import JobMatchRequest, JobMatchResult, Profile
+from app.models import JobMatchRequest
 from app.orchestrator import ProfileOrchestrator
 from app.profile_store import ProfileStore
 
@@ -109,7 +108,10 @@ async def get_profile(
     except GitHubUserNotFoundError:
         raise HTTPException(
             status_code=404,
-            detail={"code": "GITHUB_USER_NOT_FOUND", "message": f"GitHub user '{username}' not found"},
+            detail={
+                "code": "GITHUB_USER_NOT_FOUND",
+                "message": f"GitHub user '{username}' not found",
+            },
         )
     except GitHubRateLimitError as exc:
         raise HTTPException(
@@ -152,13 +154,19 @@ async def job_match(
         except Exception as exc:
             raise HTTPException(
                 status_code=422,
-                detail={"code": "JOB_URL_FETCH_ERROR", "message": f"Could not fetch job URL: {exc}"},
+                detail={
+                    "code": "JOB_URL_FETCH_ERROR",
+                    "message": f"Could not fetch job URL: {exc}",
+                },
             ) from exc
 
     if not job_text:
         raise HTTPException(
             status_code=422,
-            detail={"code": "MISSING_JOB_INPUT", "message": "job_text is empty after URL extraction"},
+            detail={
+                "code": "MISSING_JOB_INPUT",
+                "message": "job_text is empty after URL extraction",
+            },
         )
 
     if len(job_text) > 10_000:
@@ -177,9 +185,16 @@ async def job_match(
     except (GitHubUserNotFoundError, GitHubRateLimitError, GitHubUnavailableError) as exc:
         # Profile not cached — gateway errors can surface here
         if isinstance(exc, GitHubUserNotFoundError):
-            raise HTTPException(status_code=404, detail={"code": "GITHUB_USER_NOT_FOUND", "message": str(exc)})
+            raise HTTPException(
+                status_code=404,
+                detail={"code": "GITHUB_USER_NOT_FOUND", "message": str(exc)},
+            )
         if isinstance(exc, GitHubRateLimitError):
-            raise HTTPException(status_code=429, detail={"code": "GITHUB_RATE_LIMIT"}, headers={"Retry-After": str(exc.reset_at)})
+            raise HTTPException(
+                status_code=429,
+                detail={"code": "GITHUB_RATE_LIMIT"},
+                headers={"Retry-After": str(exc.reset_at)},
+            )
         raise HTTPException(status_code=502, detail={"code": "GITHUB_UNAVAILABLE"})
 
     return Response(
