@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 
 import httpx
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup  # type: ignore[import-untyped]
 from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 

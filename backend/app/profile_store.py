@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import redis.asyncio as aioredis
 from redis.exceptions import RedisError
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class ProfileStore:
     def __init__(self, redis_url: str) -> None:
-        self._redis = aioredis.from_url(redis_url)
+        self._redis: Any = aioredis.from_url(redis_url)  # type: ignore[no-untyped-call]
 
     async def get(self, username: str) -> Profile | None:
         key = self._key(username)

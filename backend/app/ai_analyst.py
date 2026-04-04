@@ -126,10 +126,10 @@ class AIAnalyst:
         """
         try:
             prompt = self._build_profile_prompt(data)
-            response = await self._client.chat.completions.create(
+            response = await self._client.chat.completions.create(  # type: ignore[call-overload]
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
-                response_format=_PROFILE_RESPONSE_FORMAT,  # type: ignore[arg-type]
+                response_format=_PROFILE_RESPONSE_FORMAT,
                 timeout=10.0,
             )
             content = response.choices[0].message.content or ""
@@ -146,10 +146,10 @@ class AIAnalyst:
         """
         try:
             prompt = self._build_job_match_prompt(data, job_text)
-            response = await self._client.chat.completions.create(
+            response = await self._client.chat.completions.create(  # type: ignore[call-overload]
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
-                response_format=_JOB_MATCH_RESPONSE_FORMAT,  # type: ignore[arg-type]
+                response_format=_JOB_MATCH_RESPONSE_FORMAT,
                 timeout=10.0,
             )
             content = response.choices[0].message.content or ""
